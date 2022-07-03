@@ -24,15 +24,23 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from libqtile import bar, layout, widget, hook
+from libqtile import bar, layout, widget, hook, extension
 from libqtile.config import Click, Drag, Group, Key, Match, Screen
 from libqtile.lazy import lazy
 from libqtile.utils import guess_terminal
+import os
+import subprocess
 
 colors = ['#8f2100', '#000000', '#979aaa']
 
 mod = "mod4"
 terminal = 'kitty'
+
+def tasklist_parser(text):
+    return text
+    # for string in [" - Chromium", " - Mozilla Firefox", " - Code - OSS"]:
+    #     text = text.replace(string, "")
+    # return text
 
 keys = [
     # A list of available commands that can be bound to keys can be found
@@ -72,10 +80,22 @@ keys = [
     Key([mod], "w", lazy.window.kill(), desc="Kill focused window"),
     Key([mod, "control"], "r", lazy.reload_config(), desc="Reload the config"),
     Key([mod, "control"], "q", lazy.shutdown(), desc="Shutdown Qtile"),
-    Key([mod], "r", lazy.spawncmd(), desc="Spawn a command using a prompt widget"),
+    #Key([mod], "r", lazy.spawncmd(), desc="Spawn a command using a prompt widget"),
+    Key([mod], "r", lazy.run_extension(extension.DmenuRun(
+        font='Ubuntu Bold',
+        fontsize='10',
+        dmenu_command='dmenu_run',
+        dmenu_prompt='⟿ ',
+        dmenu_height=25,
+        dmenu_lines=0,
+        background=colors[2],
+        foreground=colors[0],
+        selected_foreground=colors[1],
+        selected_background=colors[2],
+    )))
 ]
 
-groups = [Group(i) for i in "123456789"]
+groups = [Group(i) for i in "12345"]
 
 for i in groups:
     keys.extend(
@@ -146,8 +166,24 @@ screens = [
     Screen(
         wallpaper='~/.config/qtile/wallpaper.jpg',
         top=bar.Bar([
-            widget.GroupBox(),
-            widget.WindowName(),
+            widget.GroupBox(
+                highlight_method='text',
+                this_screen_border=colors[2],
+                this_current_screen_border=colors[2],
+                other_current_screen_border=colors[1],
+                other_screen_border=colors[1],
+                background=colors[0]
+            ),
+            right_arrow(colors[2], colors[0]),
+            widget.TaskList(
+                background=colors[2],
+                highlight_method='border',
+                foreground=colors[0],
+                unfocused_border=colors[1],
+                borderwidth=0,
+                padding=5,
+                parse_text=tasklist_parser
+            ),
             left_arrow(colors[2], colors[0]),
             widget.Battery(
                 foreground=colors[2],
@@ -169,7 +205,51 @@ screens = [
                 format='%d/%m/%y %H:%M',
                 padding=5
             ),
-            ], 25, opacity=0.5),
+            ], 25, opacity=1),
+        ),
+        Screen(
+        wallpaper='~/.config/qtile/wallpaper.jpg',
+        top=bar.Bar([
+            widget.GroupBox(
+                highlight_method='text',
+                this_screen_border=colors[2],
+                this_current_screen_border=colors[2],
+                other_current_screen_border=colors[1],
+                other_screen_border=colors[1],
+                background=colors[0]
+            ),
+            right_arrow(colors[2], colors[0]),
+            widget.TaskList(
+                background=colors[2],
+                highlight_method='border',
+                foreground=colors[0],
+                unfocused_border=colors[1],
+                borderwidth=0,
+                padding=5,
+                parse_text=tasklist_parser,
+            ),
+            left_arrow(colors[2], colors[0]),
+            widget.Battery(
+                foreground=colors[2],
+                background=colors[0],
+                format='{char} {percent:2.0%}',
+                padding=5
+            ),
+            left_arrow(colors[0], colors[2]),
+            widget.Volume(
+                foreground = colors[0],
+                background = colors[2],
+                fmt = 'Vol: {}',
+                padding = 5
+                ),
+            left_arrow(colors[2], colors[0]),
+            widget.Clock(
+                foreground=colors[2],
+                background=colors[0],
+                format='%d/%m/%y %H:%M',
+                padding=5
+            ),
+            ], 25, opacity=1),
         ),
     ]
 
